@@ -353,12 +353,32 @@ const lineNumbers = document.getElementById('line-numbers');
 
 function updateEditor() {
     let text = textarea.value;
-    let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     
-    html = html.replace(/\b(PULL|FROM|FILTER|ARRANGE BY|ASC|DESC)\b/g, '<span class="keyword">$1</span>');
-    html = html.replace(/(==|!=|>=|<=|>|<)/g, '<span class="operator">$1</span>');
-    html = html.replace(/("[^"]*"|'[^']*')/g, '<span class="literal">$1</span>');
-    html = html.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="literal">$1</span>');
+    const tokenRegex = /("[^"]*"|'[^']*')|\b(PULL|FROM|FILTER|ARRANGE|BY|ASC|DESC)\b|(==|!=|>=|<=|>|<)|\b(\d+(?:\.\d+)?)\b/g;
+    
+    let html = "";
+    let lastIndex = 0;
+    
+    text.replace(tokenRegex, (match, str, kw, op, num, offset) => {
+        let before = text.substring(lastIndex, offset);
+        html += before.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        
+        if (str) {
+            html += '<span class="literal">' + str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>';
+        } else if (kw) {
+            html += '<span class="keyword">' + kw + '</span>';
+        } else if (op) {
+            html += '<span class="operator">' + op.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>';
+        } else if (num) {
+            html += '<span class="literal">' + num + '</span>';
+        }
+        
+        lastIndex = offset + match.length;
+        return match;
+    });
+    
+    let remaining = text.substring(lastIndex);
+    html += remaining.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     
     if (text[text.length - 1] === "\n" || text.length === 0) html += " ";
     highlight.innerHTML = html;
