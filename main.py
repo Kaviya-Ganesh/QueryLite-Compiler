@@ -59,16 +59,32 @@ def run_query(query: str):
         print(f"\n[ERROR] {type(e).__name__}: {e}")
 
 if __name__ == "__main__":
-    queries = [
-        "PULL name, age FROM users FILTER age > 21 ARRANGE BY age;",
-        "PULL * FROM products FILTER price < 500;",
-        "PULL name FROM users FILTER age == 22;"
-    ]
+    print("Welcome to QueryLite Compiler!")
+    print("[1] Terminal mode")
+    print("[2] Web UI mode")
     
-    if len(sys.argv) > 1:
-        user_query = " ".join(sys.argv[1:])
-        run_query(user_query)
+    try:
+        if len(sys.argv) > 1:
+            choice = "1"
+        else:
+            choice = input("Select mode (1 or 2): ").strip()
+    except EOFError:
+        choice = "1"
+        
+    if choice == "2":
+        from server import run_server
+        run_server()
     else:
-        for q in queries:
-            run_query(q)
-            print("-" * 50)
+        queries = [
+            "PULL name, age FROM users FILTER age > 21 ARRANGE BY age;",
+            "PULL * FROM products FILTER price < 500;",
+            "PULL name FROM users FILTER age == 22;"
+        ]
+        
+        if len(sys.argv) > 1:
+            user_query = " ".join(sys.argv[1:])
+            run_query(user_query)
+        else:
+            for q in queries:
+                run_query(q)
+                print("-" * 50)

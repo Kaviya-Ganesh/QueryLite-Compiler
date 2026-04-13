@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Kaviya SG (23PT18) & Sangamithra SG (23PT30) — Compiler Design Lab, Course 23XT62 -->
+<meta charset="UTF-8">
+<title>QueryLite Compiler</title>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+body {
+    margin: 0;
+    background-color: #0d1117;
+    color: #e6edf3;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #161b22;
+    border-bottom: 1px solid #30363d;
+}
+.header-left {
+    display: flex;
+    align-items: baseline;
+    gap: 15px;
+}
+.logo {
+    font-size: 24px;
+    font-weight: 600;
+    background: linear-gradient(90deg, #7c3aed, #06b6d4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.subtitle {
+    font-size: 13px;
+    color: #8b949e;
+}
+.badges {
+    display: flex;
+    gap: 10px;
+}
+.badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    background-color: #21262d;
+    color: #8b949e;
+    font-size: 12px;
+    border: 1px solid #30363d;
+    transition: all 0.3s ease;
+}
+.badge.active {
+    background-color: rgba(80, 250, 123, 0.1);
+    color: #50fa7b;
+    border-color: rgba(80, 250, 123, 0.4);
+    box-shadow: 0 0 8px rgba(80, 250, 123, 0.2);
+}
+.main-container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+.panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+}
+.panel-editor {
+    border-right: 1px solid #30363d;
+    background-color: #161b22;
+}
+.editor-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px;
+    border-bottom: 1px solid #30363d;
+}
+.btn-run {
+    background-color: #238636;
+    color: #fff;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+.btn-run:hover {
+    background-color: #2ea043;
+    box-shadow: 0 0 10px rgba(46, 160, 67, 0.4);
+}
+.editor-workspace {
+    flex: 1;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+}
+.line-numbers {
+    width: 40px;
+    background-color: #0d1117;
+    color: #8b949e;
+    text-align: right;
+    padding: 14px 10px 14px 0;
+    font-family: 'Fira Code', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    user-select: none;
+    border-right: 1px solid #30363d;
+    overflow: hidden;
+}
+.editor-content {
+    flex: 1;
+    position: relative;
+    background-color: #0d1117;
+}
+#editor {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    color: transparent;
+    background: transparent;
+    caret-color: #e6edf3;
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: 'Fira Code', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 14px;
+    margin: 0;
+    box-sizing: border-box;
+    z-index: 2;
+    white-space: pre;
+    overflow: auto;
+}
+#editor-highlight {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    font-family: 'Fira Code', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 14px;
+    box-sizing: border-box;
+    pointer-events: none;
+    z-index: 1;
+    white-space: pre;
+    overflow: hidden;
+}
+
+.keyword { color: #ff79c6; font-weight: 500; }
+.literal { color: #f1fa8c; }
+.operator { color: #50fa7b; }
+
+.examples {
+    padding: 10px;
+    border-top: 1px solid #30363d;
+    display: flex;
+    gap: 10px;
+    background-color: #161b22;
+}
+.btn-example {
+    background-color: #21262d;
+    color: #e6edf3;
+    border: 1px solid #30363d;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-example:hover {
+    background-color: #30363d;
+    border-color: #8b949e;
+}
+
+.panel-output {
+    background-color: #0d1117;
+}
+.tabs {
+    display: flex;
+    border-bottom: 1px solid #30363d;
+    background-color: #161b22;
+}
+.tab {
+    padding: 12px 20px;
+    color: #8b949e;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    user-select: none;
+    font-size: 14px;
+}
+.tab:hover {
+    color: #e6edf3;
+    background-color: rgba(255,255,255,0.05);
+}
+.tab.active {
+    color: #e6edf3;
+    border-bottom-color: #06b6d4;
+    background-color: #0d1117;
+}
+.output-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    font-family: 'Fira Code', monospace;
+    font-size: 14px;
+}
+
+.error-msg {
+    color: #ff5555;
+    background-color: rgba(255, 85, 85, 0.1);
+    padding: 10px;
+    border-left: 3px solid #ff5555;
+    border-radius: 4px;
+    animation: fadeIn 0.3s;
+}
+.result-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #161b22;
+    border-radius: 6px;
+    overflow: hidden;
+    animation: fadeIn 0.3s;
+    border: 1px solid #30363d;
+}
+.result-table th, .result-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #30363d;
+}
+.result-table th {
+    background-color: #0d1117;
+    font-weight: 600;
+    color: #7c3aed;
+}
+.result-table tr:hover {
+    background-color: #21262d;
+}
+.result-table tr:last-child td {
+    border-bottom: none;
+}
+.code-block {
+    background-color: #161b22;
+    padding: 16px;
+    border-radius: 6px;
+    border: 1px solid #30363d;
+    white-space: pre-wrap;
+    animation: fadeIn 0.3s;
+}
+
+.progress-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    z-index: 10;
+    display: none;
+}
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #7c3aed, #06b6d4, #50fa7b);
+    background-size: 200% 200%;
+    animation: gradientMove 1s linear infinite, widthExpand 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes widthExpand {
+    0% { width: 0%; }
+    50% { width: 70%; }
+    100% { width: 100%; }
+}
+@keyframes gradientMove {
+    0% { background-position: 100% 0%; }
+    100% { background-position: -100% 0%; }
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #0d1117; }
+::-webkit-scrollbar-thumb { background: #30363d; border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: #8b949e; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-left">
+        <div class="logo">QueryLite</div>
+        <div class="subtitle">A Custom Query Language Compiler</div>
+    </div>
+    <div class="badges">
+        <div class="badge" id="badge-lexer">Lexer ✓</div>
+        <div class="badge" id="badge-parser">Parser ✓</div>
+        <div class="badge" id="badge-semantic">Semantic ✓</div>
+        <div class="badge" id="badge-optimizer">Optimizer ✓</div>
+    </div>
+</div>
+
+<div class="main-container">
+    <div class="progress-container" id="progress-container"><div class="progress-bar"></div></div>
+    
+    <div class="panel panel-editor">
+        <div class="editor-toolbar">
+            <button class="btn-run" id="btn-run">▶ Run (Ctrl+Enter)</button>
+        </div>
+        <div class="editor-workspace">
+            <div class="line-numbers" id="line-numbers">1</div>
+            <div class="editor-content">
+                <textarea id="editor" spellcheck="false" placeholder="Write QueryLite code here..."></textarea>
+                <div id="editor-highlight" aria-hidden="true"></div>
+            </div>
+        </div>
+        <div class="examples">
+            <button class="btn-example" onclick="setExample(1)">Try Example 1</button>
+            <button class="btn-example" onclick="setExample(2)">Try Example 2</button>
+            <button class="btn-example" onclick="setExample(3)">Try Example 3</button>
+        </div>
+    </div>
+    
+    <div class="panel panel-output">
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('result', event)">Result</div>
+            <div class="tab" onclick="switchTab('tokens', event)">Tokens</div>
+            <div class="tab" onclick="switchTab('ast', event)">AST</div>
+            <div class="tab" onclick="switchTab('ir', event)">IR</div>
+            <div class="tab" onclick="switchTab('optimized', event)">Optimized IR</div>
+        </div>
+        <div class="output-content" id="output-content">
+            <div style="color:#8b949e; margin-top:20px; font-family:'Inter',sans-serif; text-align: center;">Run a query to see the compiled output stages.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+const textarea = document.getElementById('editor');
+const highlight = document.getElementById('editor-highlight');
+const lineNumbers = document.getElementById('line-numbers');
+
+function updateEditor() {
+    let text = textarea.value;
+    let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    
+    html = html.replace(/\b(PULL|FROM|FILTER|ARRANGE BY|ASC|DESC)\b/g, '<span class="keyword">$1</span>');
+    html = html.replace(/(==|!=|>=|<=|>|<)/g, '<span class="operator">$1</span>');
+    html = html.replace(/("[^"]*"|'[^']*')/g, '<span class="literal">$1</span>');
+    html = html.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="literal">$1</span>');
+    
+    if (text[text.length - 1] === "\n" || text.length === 0) html += " ";
+    highlight.innerHTML = html;
+    
+    const lines = text.split('\n').length;
+    lineNumbers.innerHTML = Array(lines).fill(0).map((_, i) => i + 1).join('<br>');
+}
+
+textarea.addEventListener('input', updateEditor);
+textarea.addEventListener('scroll', () => {
+    highlight.scrollTop = textarea.scrollTop;
+    highlight.scrollLeft = textarea.scrollLeft;
+    lineNumbers.scrollTop = textarea.scrollTop;
+});
+
+updateEditor();
+
+window.setExample = function(num) {
+    if (num === 1) {
+        textarea.value = "PULL name, age FROM users FILTER age > 21 ARRANGE BY age DESC;";
+    } else if (num === 2) {
+        textarea.value = "PULL * FROM products FILTER price < 500;";
+    } else if (num === 3) {
+        textarea.value = "PULL name FROM users FILTER age == 22;";
+    }
+    updateEditor();
+};
+
+let activeTab = 'result';
+let lastResponse = null;
+
+window.switchTab = function(tabId, event) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    if (event) event.target.classList.add('active');
+    activeTab = tabId;
+    renderOutput();
+};
+
+function renderOutput() {
+    const container = document.getElementById('output-content');
+    if (!lastResponse) return;
+    
+    if (lastResponse.error) {
+        container.innerHTML = `<div class="error-msg">${lastResponse.error}</div>`;
+        return;
+    }
+
+    if (activeTab === 'result') {
+        const rows = lastResponse.result;
+        if (!rows || rows.length === 0) {
+            container.innerHTML = '<div class="code-block" style="text-align:center;">Empty result set.</div>';
+            return;
+        }
+        const keys = Object.keys(rows[0]);
+        let html = '<table class="result-table"><thead><tr>';
+        keys.forEach(k => html += `<th>${k}</th>`);
+        html += '</tr></thead><tbody>';
+        rows.forEach(row => {
+            html += '<tr>';
+            keys.forEach(k => html += `<td>${row[k]}</td>`);
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    } else if (activeTab === 'tokens') {
+        const tStr = lastResponse.tokens.map(t => `Token(type='${t.type}', value='${t.value}')`).join('\n');
+        container.innerHTML = `<div class="code-block"><span style="color:#f1fa8c">${tStr.replace(/</g, '&lt;')}</span></div>`;
+    } else if (activeTab === 'ast') {
+        container.innerHTML = `<div class="code-block" style="color:#8be9fd">${lastResponse.ast.replace(/</g, '&lt;')}</div>`;
+    } else if (activeTab === 'ir') {
+        container.innerHTML = `<div class="code-block" style="color:#ffb86c">${lastResponse.ir.replace(/</g, '&lt;')}</div>`;
+    } else if (activeTab === 'optimized') {
+        container.innerHTML = `<div class="code-block" style="color:#50fa7b">${lastResponse.optimized_ir.replace(/</g, '&lt;')}</div>`;
+    }
+}
+
+document.getElementById('btn-run').addEventListener('click', runQuery);
+document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        runQuery();
+    }
+});
+
+async function runQuery() {
+    const query = textarea.value.trim();
+    if (!query) return;
+
+    ['lexer', 'parser', 'semantic', 'optimizer'].forEach(id => {
+        document.getElementById('badge-' + id).classList.remove('active');
+    });
+    
+    document.getElementById('progress-container').style.display = 'block';
+    document.getElementById('output-content').innerHTML = '<div style="color:#8b949e; text-align: center; margin-top:20px;">Compiling...</div>';
+
+    try {
+        const res = await fetch('/compile', {
+            method: 'POST',
+            body: JSON.stringify({query}),
+            headers: {'Content-Type': 'application/json'}
+        });
+        const data = await res.json();
+        lastResponse = data;
+        
+        setTimeout(() => { document.getElementById('progress-container').style.display = 'none'; }, 500);
+
+        if (!data.error) {
+            const stages = ['lexer', 'parser', 'semantic', 'optimizer'];
+            stages.forEach((stage, idx) => {
+                setTimeout(() => {
+                    document.getElementById('badge-' + stage).classList.add('active');
+                }, 200 * (idx + 1));
+            });
+            setTimeout(() => renderOutput(), 200 * stages.length + 100);
+        } else {
+            renderOutput();
+        }
+    } catch(err) {
+        lastResponse = {error: "Network error calling compilation API."};
+        renderOutput();
+        document.getElementById('progress-container').style.display = 'none';
+    }
+}
+</script>
+</body>
+</html>
