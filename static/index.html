@@ -475,7 +475,11 @@ function renderOutput() {
     }
     
     if (lastResponse.error) {
-        container.innerHTML = injectedHeader + `<div class="error-msg">${lastResponse.error}</div>` + injectedFooter;
+        let extraNote = "";
+        if (currentDemoTitle && currentDemoTitle.includes("Semantic Analysis catching an error")) {
+             extraNote = `<div style="margin-top:15px; color:#50fa7b; font-weight:bold;">✔ PHASE SHOWCASED: The compiler correctly verified schema and intercepted the query because column 'marks' does not exist in 'students', preventing runtime crashes.</div>`;
+        }
+        container.innerHTML = injectedHeader + `<div class="error-msg">${lastResponse.error}</div>` + extraNote + injectedFooter;
         return;
     }
 
@@ -510,10 +514,23 @@ function renderOutput() {
     container.innerHTML = injectedHeader + mainHtml + injectedFooter;
 }
 
-document.getElementById('btn-run').addEventListener('click', runQuery);
+document.getElementById('btn-run').addEventListener('click', () => {
+    // Reset demo state if standard run is clicked manually
+    currentDemoIndex = -1;
+    document.getElementById('btn-demo').innerHTML = "▶ Run Full Demo";
+    document.getElementById('btn-demo').style.backgroundColor = "#7c3aed";
+    currentDemoTitle = null;
+    showDemoSummary = false;
+    runQuery();
+});
 document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.key === 'Enter') {
         e.preventDefault();
+        currentDemoIndex = -1;
+        document.getElementById('btn-demo').innerHTML = "▶ Run Full Demo";
+        document.getElementById('btn-demo').style.backgroundColor = "#7c3aed";
+        currentDemoTitle = null;
+        showDemoSummary = false;
         runQuery();
     }
 });
@@ -594,36 +611,55 @@ const demoQueries = [
     }
 ];
 
-document.getElementById('btn-demo').addEventListener('click', async () => {
+let currentDemoIndex = -1;
+
+const demoBtn = document.getElementById('btn-demo');
+demoBtn.addEventListener('click', async () => {
+    if (currentDemoIndex === -1) {
+        currentDemoIndex = 0;
+    } else {
+        currentDemoIndex++;
+    }
+    
+    if (currentDemoIndex >= demoQueries.length) {
+        currentDemoIndex = -1;
+        demoBtn.innerHTML = "▶ Run Full Demo";
+        demoBtn.style.backgroundColor = "#7c3aed";
+        currentDemoTitle = null;
+        showDemoSummary = false;
+        return;
+    }
+    
+    const demo = demoQueries[currentDemoIndex];
+    
+    if (currentDemoIndex < demoQueries.length - 1) {
+        demoBtn.innerHTML = `⏭ Next Step (Demo ${currentDemoIndex + 2} of 6)`;
+        demoBtn.style.backgroundColor = "#d97706"; // engaging orange
+    } else {
+        demoBtn.innerHTML = "⏹ Finish Tour";
+        demoBtn.style.backgroundColor = "#e11d48"; // finish red
+    }
+    
     document.getElementById('btn-run').disabled = true;
-    document.getElementById('btn-demo').disabled = true;
+    demoBtn.disabled = true;
     
     const container = document.getElementById('output-content');
     activeTab = 'result';
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab')[0].classList.add('active');
     
-    for (let i = 0; i < demoQueries.length; i++) {
-        const demo = demoQueries[i];
-        textarea.value = demo.q;
-        updateEditor();
-        
-        currentDemoTitle = demo.title;
-        showDemoSummary = (i === 5);
-        
-        container.innerHTML = `<div style="color:#50fa7b; font-weight:bold; margin-bottom: 20px; font-size:16px;">═══════════════════════════════════════════════════<br>${demo.title}<br>═══════════════════════════════════════════════════</div><div style="color:#8b949e; text-align: center;">Running query...</div>`;
-        
-        await runQuery();
-        
-        if (i < 5) {
-            await new Promise(r => setTimeout(r, 1500));
-        }
-    }
+    textarea.value = demo.q;
+    updateEditor();
     
-    currentDemoTitle = null;
-    showDemoSummary = false;
+    currentDemoTitle = demo.title;
+    showDemoSummary = (currentDemoIndex === 5);
+    
+    container.innerHTML = `<div style="color:#50fa7b; font-weight:bold; margin-bottom: 20px; font-size:16px;">═══════════════════════════════════════════════════<br>${demo.title}<br>═══════════════════════════════════════════════════</div><div style="color:#8b949e; text-align: center;">Running query...</div>`;
+    
+    await runQuery();
+    
     document.getElementById('btn-run').disabled = false;
-    document.getElementById('btn-demo').disabled = false;
+    demoBtn.disabled = false;
 });
 </script>
 </body>
