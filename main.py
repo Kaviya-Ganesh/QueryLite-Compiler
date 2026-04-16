@@ -127,7 +127,8 @@ def run_query(query: str):
         
         ir_gen = IRGenerator(ast)
         ir = ir_gen.generate()
-        print(f"\n[4] IR Tree:\n  {ir}")
+        original_ir_str = str(ir)
+        print(f"\n[4] IR Tree:\n  {original_ir_str}")
         
         optimizer = Optimizer()
         optimized_ir = optimizer.optimize(ir)

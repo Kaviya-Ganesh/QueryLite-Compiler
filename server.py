@@ -79,6 +79,9 @@ class RequestHandler(BaseHTTPRequestHandler):
         ir_gen = IRGenerator(ast)
         ir = ir_gen.generate()
         
+        # Save original IR string before optimization mutates it
+        original_ir_str = str(ir)
+        
         optimizer = Optimizer()
         optimized_ir = optimizer.optimize(ir)
         
@@ -88,7 +91,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         return {
             "tokens": tokens_list,
             "ast": str(ast),
-            "ir": str(ir),
+            "ir": original_ir_str,
             "optimized_ir": str(optimized_ir),
             "result": result
         }
