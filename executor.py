@@ -1,4 +1,4 @@
-# Kaviya SG (23PT18) & Sangamithra SG (23PT30) — Compiler Design Lab, Course 23XT67
+# Kaviya SG (23PT18) & Sangamithra SG (23PT30) — Compiler Design Lab, Course 23XT62
 
 from ir import IRNode, TableScan, FilterOp, ProjectOp, SortOp
 
